@@ -3,11 +3,15 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class CompletableFutureTest {
     @Test
@@ -65,20 +69,56 @@ public class CompletableFutureTest {
         return list.stream().map(User::getId).collect(Collectors.toList());
     }
 
-    private static void sleep(int timeout){
+    @Test
+    public void completedFutureExample() throws ExecutionException, InterruptedException {
+        CompletableFuture cf = CompletableFuture.completedFuture("message");
+        assertTrue(cf.isDone());
+        assertEquals("message", cf.get());
+        assertEquals("message", cf.getNow(null));
+    }
 
+    @Test
+    public void runAsyncExample() {
+        CompletableFuture cf = CompletableFuture.runAsync(() -> {
+            //System.out.println(Thread.currentThread().getName());
+            assertTrue(Thread.currentThread().isDaemon());
+            sleep(300);
+        });
+        assertFalse(cf.isDone());
+        sleep(301);
+        assertTrue(cf.isDone());
+    }
+
+    @Test
+    public void thenApplyExample() {
+        CompletableFuture cf = CompletableFuture.completedFuture("message").thenApply(s -> {
+            //System.out.println(Thread.currentThread().getName());
+            assertFalse(Thread.currentThread().isDaemon());
+            return s.toUpperCase();
+        });
+        assertEquals("MESSAGE", cf.getNow(null));
+    }
+
+
+    @Test
+    public void thenApplyAsyncExample() {
+        CompletableFuture cf = CompletableFuture.completedFuture("message")
+                .thenApplyAsync(s -> {
+                    //System.out.println(Thread.currentThread().getName());
+                    assertTrue(Thread.currentThread().isDaemon());
+                    sleep(200);
+                    return s.toUpperCase();
+                });
+        // TODO
+        assertNull(cf.getNow(null));
+        assertEquals("MESSAGE", cf.join());
+    }
+
+
+    private static void sleep(int timeout){
         try {
             Thread.sleep(timeout);
         } catch (InterruptedException e) {
         }
     }
-
-    Function<List<Long>, List<User>> fetchUsers = (ids) -> {
-        sleep(300);
-        return ids.stream()
-                .map(id -> User.builder().id(id).build())
-                .collect(Collectors.toList());
-    };
-
-    Consumer<List<User>> displayer = users -> users.forEach(System.out::println);
 }
