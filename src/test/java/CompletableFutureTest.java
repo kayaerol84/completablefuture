@@ -8,7 +8,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -199,6 +198,122 @@ public class CompletableFutureTest {
         assertTrue("Was not canceled", cf.cancel(true));
         assertTrue("Was not completed exceptionally", cf.isCompletedExceptionally());
         assertEquals("canceled message", cf2.join());
+    }
+
+    /**
+     * thenCombine, thenCompose
+     */
+    @Test
+    public void thenCombineExample() {
+        String original = "Message";
+        CompletableFuture cf = CompletableFuture.completedFuture(original).thenApply(s -> delayedUpperCase(s))
+                .thenCombine(CompletableFuture.completedFuture(original).thenApply(s -> delayedLowerCase(s)),
+                        (s1, s2) -> concat(s1, s2));
+        assertEquals("MESSAGEmessage", cf.getNow(null));
+    }
+
+    private String concat(String s1, String s2) {
+        return s1 + s2;
+    }
+
+    @Test
+    public void thenCombineAsyncExample() {
+        String original = "Message";
+        CompletableFuture<String> cf = CompletableFuture.completedFuture(original)
+                .thenApplyAsync(s -> delayedUpperCase(s));
+
+        CompletableFuture<String> cf2 = CompletableFuture.completedFuture(original)
+                .thenApplyAsync(s -> delayedLowerCase(s));
+
+        CompletableFuture<String> result = cf.thenCombine(cf2, (s1, s2) -> concat(s1, s2));
+
+        assertEquals("MESSAGEmessage", result.join());
+    }
+/*
+    @Test
+    public void thenCombineAsyncExample() {
+        String original = "Message";
+        CompletableFuture cf = CompletableFuture.completedFuture(original)
+                .thenApplyAsync(s -> delayedUpperCase(s))
+                .thenCombine(CompletableFuture.completedFuture(original).thenApplyAsync(s -> delayedLowerCase(s)),
+                        (s1, s2) -> s1 + s2);
+        assertEquals("MESSAGEmessage", cf.join());
+    }*/
+
+
+
+    //***************** Either examples
+    /**
+     * Function & apply
+     */
+    @Test
+    public void applyToEitherExample() {
+        String original = "Message";
+        CompletableFuture cf1 = CompletableFuture.completedFuture(original)
+                .thenApplyAsync(CompletableFutureTest::delayedUpperCase);
+        CompletableFuture cf2 = cf1.applyToEither(
+                CompletableFuture.completedFuture(original).thenApplyAsync(CompletableFutureTest::delayedLowerCase),
+                s -> s + " from applyToEither");
+
+        String result = (String) cf2.join();
+        System.out.println(result);
+        assertTrue(result.endsWith(" from applyToEither"));
+    }
+
+    /**
+     * Consumer & accept
+     */
+    @Test
+    public void acceptEitherExample() {
+        String original = "Message";
+        StringBuilder result = new StringBuilder();
+        CompletableFuture cf = CompletableFuture.completedFuture(original)
+                .thenApplyAsync(CompletableFutureTest::delayedUpperCase)
+                .acceptEither(CompletableFuture.completedFuture(original).thenApplyAsync(CompletableFutureTest::delayedLowerCase),
+                        s -> result.append(s).append("acceptEither"));
+        cf.join();
+        System.out.println(result);
+        assertTrue("Result was empty", result.toString().endsWith("acceptEither"));
+    }
+
+    /**
+     * runAfterBoth, thenAcceptBoth
+     */
+    @Test
+    public void runAfterBothExample() {
+        String original = "Message";
+        StringBuilder result = new StringBuilder();
+        CompletableFuture.completedFuture(original)
+                .thenApply(String::toUpperCase)
+                .runAfterBoth(
+                        CompletableFuture.completedFuture(original).thenApply(String::toLowerCase),
+                        () -> result.append("done"));
+        assertEquals("done", result.toString());
+        assertTrue("Result was empty", result.length() > 0);
+    }
+
+    @Test
+    public void thenAcceptBothExample() {
+        String original = "Message";
+        StringBuilder result = new StringBuilder();
+        CompletableFuture.completedFuture(original).thenApply(String::toUpperCase).thenAcceptBoth(
+                CompletableFuture.completedFuture(original).thenApply(String::toLowerCase),
+                (s1, s2) -> result.append(s1).append(s2));
+        assertEquals("MESSAGEmessage", result.toString());
+    }
+
+    private static String delayedLowerCase(String s) {
+        System.out.println("delayedLowerCase **** Thread - " + Thread.currentThread().getName());
+        System.out.println("Is Thread deamon? " + Thread.currentThread().isDaemon());
+        sleep(300);
+        return s.toLowerCase();
+    }
+
+    private static String delayedUpperCase(String s) {
+        System.out.println("delayedUpperCase **** Thread - " + Thread.currentThread().getName());
+        System.out.println("Is Thread deamon? " + Thread.currentThread().isDaemon());
+        sleep(300);
+        return s.toUpperCase();
     }
 
 }
