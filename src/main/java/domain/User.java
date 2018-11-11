@@ -1,3 +1,5 @@
+package domain;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,3 +1,6 @@
+import domain.User;
+import domain.Worker;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -25,19 +28,23 @@ public class CompletableFutureTest {
         }
     }
 
-    @Test
-    public void testSupplier(){
+    private CompletableFuture<List<User>> users;
+    private CompletableFuture<List<Worker>> workers;
 
-    }
+    @Before
+    public void setup(){
+        users = CompletableFuture.supplyAsync(
+                () -> Arrays.asList(User.builder().id(1L).name("Naive user").build(),
+                        User.builder().id(2L).name("Daft user").build(),
+                        User.builder().id(3L).name("Weirdo").build())
+        );
 
-    @Test
-    public void testReduce(){
-
-    }
-
-    @Test
-    public void testFlatMap(){
-
+        workers = CompletableFuture.supplyAsync(
+                () -> Arrays.asList(Worker.builder().id(1L).name("Crazy worker").build(),
+                        Worker.builder().id(2L).name("Best worker").build(),
+                        Worker.builder().id(2L).name("Best worker").build(),
+                        Worker.builder().id(3L).name("Mad worker").build())
+        );
     }
 
     @Test
@@ -81,7 +88,7 @@ public class CompletableFutureTest {
     @Test
     public void runAsyncExample() {
         CompletableFuture cf = CompletableFuture.runAsync(() -> {
-            //System.out.println(Thread.currentThread().getName());
+            System.out.println("runAsyncExample Thread name: " + Thread.currentThread().getName());
             assertTrue(Thread.currentThread().isDaemon());
             sleep(300);
         });
@@ -93,7 +100,7 @@ public class CompletableFutureTest {
     @Test
     public void thenApplyExample() {
         CompletableFuture cf = CompletableFuture.completedFuture("message").thenApply(s -> {
-            //System.out.println(Thread.currentThread().getName());
+            System.out.println("thenApplyExample Thread name: " + Thread.currentThread().getName());
             assertFalse(Thread.currentThread().isDaemon());
             return s.toUpperCase();
         });
@@ -176,7 +183,7 @@ public class CompletableFutureTest {
         cf.completeExceptionally(new RuntimeException("completed exceptionally"));
         assertTrue("Was not completed exceptionally", cf.isCompletedExceptionally());
         try {
-            // The join() method doesn't throw checked exceptions.
+            // TODO The join() method doesn't throw checked exceptions.
             // Instead it throws unchecked CompletionException.
             // So you do not need a try-catch block and instead you can fully harness exceptionally() method
             cf.join();
@@ -201,7 +208,7 @@ public class CompletableFutureTest {
     }
 
     /**
-     * thenCombine, thenCompose
+     * thenCombine (reduce), thenCompose (flatMap)
      */
     @Test
     public void thenCombineExample() {
@@ -239,6 +246,41 @@ public class CompletableFutureTest {
                         (s1, s2) -> s1 + s2);
         assertEquals("MESSAGEmessage", cf.join());
     }*/
+
+    @Test
+    public void thenComposeExample() {
+        String original = "Message";
+        CompletableFuture<String> cf = CompletableFuture.completedFuture(original).thenApply(s -> delayedUpperCase(s));
+        CompletableFuture<String> cf2 = CompletableFuture.completedFuture(original).thenApply(s -> delayedLowerCase(s));
+        CompletableFuture<String> result = cf.thenCompose(first -> cf2.thenApply(second -> first + second));
+        assertEquals("MESSAGEmessage", result.join());
+
+        CompletableFuture<String> completableFuture = CompletableFuture.supplyAsync(() -> "Hello")
+                .thenCompose(s -> CompletableFuture.supplyAsync(() -> s + " World"));
+
+        assertEquals("Hello World", completableFuture.join());
+    }
+
+
+    // AnyOF & AllOf
+    @Test
+    public void anyOfExample() {
+        final StringBuilder result = new StringBuilder();
+        final List<String> messages = Arrays.asList("a", "b", "c");
+        List<CompletableFuture> futures =
+                messages.stream()
+                        .map(msg -> CompletableFuture.completedFuture(msg).thenApply(s -> delayedUpperCase(s)))
+                        .collect(Collectors.toList());
+
+        CompletableFuture.anyOf(futures.toArray(new CompletableFuture[futures.size()]))
+                .whenComplete((msg, throwable) -> {
+                    if(throwable == null) {
+                        result.append(msg);
+                    }
+                });
+        assertEquals(1, result.length());
+        assertEquals("A", result.toString());
+    }
 
 
 
