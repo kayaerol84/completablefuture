@@ -1,17 +1,15 @@
 package products;
 
-import customer.Customer;
-import resource.AbstractService;
+import customer.CustomerService;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class CreditCardService extends AbstractService {
+public class CreditCardService extends CustomerService {
 
     public CompletableFuture<List<CreditCard>> getCreditCardsOf(Long customerId) {
+        sleep(300);
         List<CreditCard> creditCards = customers.get(customerId).getProducts().stream()
                 .filter(CreditCard.class::isInstance)
                 .map(product -> (CreditCard) product)

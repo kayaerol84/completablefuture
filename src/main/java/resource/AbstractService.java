@@ -66,7 +66,15 @@ public abstract class AbstractService {
     }
 
     public static Product buildLoanWithOverdue(Loan loan, long overdue){
+        sleep(200);
         loan.setOverdueInterestPayment(overdue);
         return loan;
+    }
+
+    public static void sleep(int timeout){
+        try {
+            Thread.sleep(timeout);
+        } catch (InterruptedException e) {
+        }
     }
 }

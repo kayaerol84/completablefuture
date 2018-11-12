@@ -1,4 +1,4 @@
-package domain;
+package user;
 
 import lombok.Builder;
 import lombok.Getter;

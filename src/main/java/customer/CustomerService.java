@@ -3,15 +3,13 @@ package customer;
 import products.CreditCard;
 import products.Loan;
 import products.Product;
-import resource.AbstractService;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
-public class CustomerService extends AbstractService {
-    private static final Map<Long, Customer> customers;
+public abstract class CustomerService {
+
+    public static final Map<Long, Customer> customers;
 
     static {
         customers = new HashMap<>();
@@ -24,26 +22,58 @@ public class CustomerService extends AbstractService {
         customers.put(7L, buildWithMultipleProducts(7L, "Peter Petrelli", "1234"));
         customers.put(8L, buildWithMultipleProducts(8L, "Jean Grey", "8888"));
     }
-    public CompletableFuture<List<Loan>> getLoansOf(Long customerId) {
-        List<Loan> loans = customers.get(customerId).getProducts().stream()
-                .filter(Loan.class::isInstance)
-                .map(product -> (Loan) product)
-                .collect(Collectors.toList());
-        return CompletableFuture.supplyAsync(() -> {
-            System.out.println("Thread in getLoansOf : " + Thread.currentThread().getName());
-            System.out.println("Is Thread daemon : " + Thread.currentThread().isDaemon());
-            return loans;
-        });
+
+    public static Customer buildWithMultipleProducts(Long customerId, String name, String lastDigits) {
+        return Customer.builder()
+                .id(customerId)
+                .name(name)
+                .products(Arrays.asList(buildLoan(customerId), mockCreditCard(customerId, lastDigits)))
+                .build();
     }
-    public CompletableFuture<List<CreditCard>> getCreditCardsOf(Long customerId) {
-        List<CreditCard> creditCards = customers.get(customerId).getProducts().stream()
-                .filter(CreditCard.class::isInstance)
-                .map(product -> (CreditCard) product)
-                .collect(Collectors.toList());
-        return CompletableFuture.supplyAsync(() -> {
-            System.out.println("Thread in getCreditCardsOf : " + Thread.currentThread().getName());
-            System.out.println("Is Thread daemon : " + Thread.currentThread().isDaemon());
-            return creditCards;
-        });
+
+    public static Customer buildWithCreditCard(Long customerId, String name, String lastDigits) {
+        return Customer.builder()
+                .id(customerId)
+                .name(name)
+                .products(Collections.singletonList(mockCreditCard(customerId, lastDigits)))
+                .build();
+    }
+
+    public static Customer buildWithLoan(Long customerId, String name){
+        return Customer.builder()
+                .id(customerId)
+                .name(name)
+                .products(Collections.singletonList(buildLoan(customerId)))
+                .build();
+    }
+    public static Product mockCreditCard(Long customerId, String lastDigits) {
+        return CreditCard.builder()
+                .id(new Random().nextLong())
+                .customerId(customerId)
+                .expireDate(LocalDate.of(2022, 2, 2))
+                .cardNumber("4488****----****"+lastDigits)
+                .build();
+    }
+    public static Product buildLoan(Long customerId) {
+        return Loan.builder()
+                .id(new Random().nextLong())
+                .customerId(customerId)
+                .duration(24)
+                .monthlyAmount(1000)
+                .totalAmount(24000)
+                .build();
+    }
+
+    public static Product buildLoanWithOverdue(Loan loan, long overdue){
+        sleep(200);
+        loan.setOverdueInterestPayment(overdue);
+        return loan;
+    }
+
+    public static void sleep(int timeout){
+        try {
+            Thread.sleep(timeout);
+        } catch (InterruptedException e) {
+        }
     }
 }

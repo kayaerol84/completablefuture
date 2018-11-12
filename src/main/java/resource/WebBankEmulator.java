@@ -1,6 +1,5 @@
 package resource;
 
-import customer.Customer;
 import customer.CustomerService;
 import products.*;
 
@@ -9,12 +8,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class WebBankEmulator {
-    private static CustomerService customerService = new CustomerService();
     private static LoanService loanService = new LoanService();
     private static CreditCardService creditCardService = new CreditCardService();
 
@@ -26,13 +22,14 @@ public class WebBankEmulator {
         Long customerId = 5L;
 
         CompletableFuture<List<Product>> allProducts = loanService.getLoansOf(customerId)
-                .thenCombine(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts);
-                //.thenCombineAsync(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts, executor);
+                //.thenCombine(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts);
+                .thenCombineAsync(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts, executor);
 
         CompletableFuture<List<Product>> loansWithOverdue = allProducts
                 .thenApply( products -> updateOverdueInterest(products));
                 //.thenApplyAsync(products -> updateOverdueInterest(products), executor);
 
+        CustomerService.sleep(300);
         loansWithOverdue
                 .thenAccept( loans -> outputLoans(loans));
                 //.thenAcceptAsync( loans -> outputLoans(loans), executor );
@@ -40,6 +37,7 @@ public class WebBankEmulator {
     }
 
     private static void outputLoans(List<Product> loans) {
+        CustomerService.sleep(300);
         System.out.println("Thread in outputLoans : " + Thread.currentThread().getName());
         System.out.println("Is Thread daemon : " + Thread.currentThread().isDaemon());
 
@@ -47,11 +45,12 @@ public class WebBankEmulator {
     }
 
     private static List<Product> updateOverdueInterest(List<Product> products) {
+
         System.out.println("Thread in updateOverdueInterest : " + Thread.currentThread().getName());
         System.out.println("Is Thread daemon : " + Thread.currentThread().isDaemon());
 
         return products.stream().filter(Loan.class::isInstance).map(product -> (Loan) product)
-                .map(loan -> AbstractService.buildLoanWithOverdue(loan,10))
+                .map(loan -> CustomerService.buildLoanWithOverdue(loan,10))
                 .collect(Collectors.toList());
     }
 

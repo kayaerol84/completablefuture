@@ -1,5 +1,5 @@
-import domain.User;
-import domain.Worker;
+import user.User;
+import user.Worker;
 import org.junit.Before;
 import org.junit.Test;
 
