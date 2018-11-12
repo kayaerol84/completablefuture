@@ -4,6 +4,7 @@ import customer.Customer;
 import customer.CustomerService;
 import products.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -29,10 +30,12 @@ public class WebBankEmulator {
                 //.thenCombineAsync(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts, executor);
 
         CompletableFuture<List<Product>> loansWithOverdue = allProducts
-                //.thenApply( products -> updateOverdueInterest(products))
-                .thenApplyAsync(products -> updateOverdueInterest(products), executor);
+                .thenApply( products -> updateOverdueInterest(products));
+                //.thenApplyAsync(products -> updateOverdueInterest(products), executor);
 
-        loansWithOverdue.thenAcceptAsync( loans -> outputLoans(loans), executor );
+        loansWithOverdue
+                .thenAccept( loans -> outputLoans(loans));
+                //.thenAcceptAsync( loans -> outputLoans(loans), executor );
         executor.shutdown();
     }
 
@@ -58,18 +61,9 @@ public class WebBankEmulator {
         loans.forEach(System.out::println);
         creditCards.forEach(System.out::println);
 
-        return loans.stream()
-                .flatMap(product -> creditCards.stream()).collect(Collectors.toList());
+        List<Product> products = new ArrayList<>();
+        products.addAll(loans);
+        products.addAll(creditCards);
+        return  products;
     }
-    /*private static List<Product> showProducts(List<Loan> loans, List<CreditCard> creditCardsOf) {
-
-        Stream<Product> products = loans.stream().map(loan -> (Product) loan)
-                .flatMap(product -> creditCardsOf.stream().map(creditCard -> (Product) creditCard));
-
-        products.forEach( product -> System.out.println(product.getCustomerId()));
-
-        return products.collect(Collectors.toList());
-    }*/
-
-
 }
