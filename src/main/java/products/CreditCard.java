@@ -2,12 +2,13 @@ package products;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.ToString;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 
 @Getter
+@ToString
 public class CreditCard extends Product {
     private String cardNumber;
     private LocalDate expireDate;
