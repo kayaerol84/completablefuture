@@ -30,9 +30,18 @@ public class WebBankEmulator {
                 //.thenApplyAsync(products -> updateOverdueInterest(products), executor);
 
         CustomerService.sleep(300);
-        loansWithOverdue
+        CompletableFuture<Void> result = loansWithOverdue
                 .thenAccept( loans -> outputLoans(loans));
                 //.thenAcceptAsync( loans -> outputLoans(loans), executor );
+
+        //TODO Can you chain a CF of Void ?
+        result.thenRun( () -> System.out.println("This completable future never dies"));
+
+        // TODO anyOf & allOf
+        Long otherCustomerId = 8L;
+        CompletableFuture<Void> allProductsAgain =
+                CompletableFuture.allOf(loanService.getLoansOf(otherCustomerId), creditCardService.getCreditCardsOf(otherCustomerId));
+        CompletableFuture<Object> anyProductsAgain = CompletableFuture.anyOf(loanService.getLoansOf(otherCustomerId), creditCardService.getCreditCardsOf(otherCustomerId));
         executor.shutdown();
     }
 
