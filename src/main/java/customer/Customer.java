@@ -6,12 +6,13 @@ import lombok.ToString;
 import products.Product;
 
 import java.util.List;
+import java.util.UUID;
 
 @Builder
 @Getter
 @ToString
 public class Customer {
-    private Long id;
+    private UUID id;
     private String name;
     private List<Product> products;
 }

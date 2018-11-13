@@ -6,7 +6,6 @@ import products.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -42,10 +41,11 @@ public class WebBankEmulator {
         result.thenRun( () -> System.out.println("This completable future never dies"));
 
         // TODO anyOf & allOf
-        Long otherCustomerId = 8L;
+        /*Long otherCustomerId = 8L;
         CompletableFuture<Void> allProductsAgain =
                 CompletableFuture.allOf(loanService.getLoansOf(otherCustomerId), creditCardService.getCreditCardsOf(otherCustomerId));
         CompletableFuture<Object> anyProductsAgain = CompletableFuture.anyOf(loanService.getLoansOf(otherCustomerId), creditCardService.getCreditCardsOf(otherCustomerId));
+        */
         executor.shutdown();
     }
 

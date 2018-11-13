@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.UUID;
+
 @Getter
 @Setter
 @ToString
@@ -16,7 +18,7 @@ public class Loan extends Product{
     private long overdueInterestPayment;
 
     @Builder
-    public Loan(Long id, Long customerId, int duration, long totalAmount, long monthlyAmount, long overdueInterestPayment) {
+    public Loan(UUID id, Long customerId, int duration, long totalAmount, long monthlyAmount, long overdueInterestPayment) {
         super(id, customerId);
         this.duration = duration;
         this.totalAmount = totalAmount;

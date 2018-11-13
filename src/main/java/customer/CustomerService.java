@@ -11,7 +11,7 @@ import java.util.*;
 
 public abstract class CustomerService {
 
-    public static final Map<Long, Customer> customers;
+    protected static final Map<Long, Customer> customers;
 
     static {
         customers = new HashMap<>();
@@ -29,7 +29,7 @@ public abstract class CustomerService {
 
     private static Customer buildWithMultipleProducts(Long customerId, String name, String lastDigits, String accountNumber) {
         return Customer.builder()
-                .id(customerId)
+                .id(UUID.randomUUID())
                 .name(name)
                 .products(Arrays.asList(buildLoan(customerId), buildCreditCard(customerId, lastDigits),
                         buildAccount(customerId, accountNumber)))
@@ -46,7 +46,7 @@ public abstract class CustomerService {
 
     private static Customer buildWithCreditCard(Long customerId, String name, String lastDigits) {
         return Customer.builder()
-                .id(customerId)
+                .id(UUID.randomUUID())
                 .name(name)
                 .products(Collections.singletonList(buildCreditCard(customerId, lastDigits)))
                 .build();
@@ -54,14 +54,14 @@ public abstract class CustomerService {
 
     private static Customer buildWithLoan(Long customerId, String name){
         return Customer.builder()
-                .id(customerId)
+                .id(UUID.randomUUID())
                 .name(name)
                 .products(Collections.singletonList(buildLoan(customerId)))
                 .build();
     }
     private static Product buildCreditCard(Long customerId, String lastDigits) {
         return CreditCard.builder()
-                .id(new Random().nextLong())
+                .id(UUID.randomUUID())
                 .customerId(customerId)
                 .expireDate(LocalDate.of(2022, 2, 2))
                 .cardNumber("4488****----****"+lastDigits)
@@ -69,7 +69,7 @@ public abstract class CustomerService {
     }
     private static Product buildLoan(Long customerId) {
         return Loan.builder()
-                .id(new Random().nextLong())
+                .id(UUID.randomUUID())
                 .customerId(customerId)
                 .duration(24)
                 .monthlyAmount(1000)

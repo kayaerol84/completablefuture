@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 
 @Getter
@@ -14,7 +15,7 @@ public class CreditCard extends Product {
     private LocalDate expireDate;
 
     @Builder
-    public CreditCard(Long id, Long customerId, String cardNumber, LocalDate expireDate) {
+    public CreditCard(UUID id, Long customerId, String cardNumber, LocalDate expireDate) {
         super(id, customerId);
         this.cardNumber = cardNumber;
         this.expireDate = expireDate;

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,7 +15,7 @@ public class Account extends Product {
     private String accountNumber;
     private BigDecimal balance;
     @Builder
-    public Account(Long id, Long customerId, String accountNumber, BigDecimal balance) {
+    public Account(UUID id, Long customerId, String accountNumber, BigDecimal balance) {
         super(id, customerId);
         this.accountNumber = accountNumber;
         this.balance = balance;
