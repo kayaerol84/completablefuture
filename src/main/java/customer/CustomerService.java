@@ -1,9 +1,11 @@
 package customer;
 
+import products.Account;
 import products.CreditCard;
 import products.Loan;
 import products.Product;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -19,34 +21,45 @@ public abstract class CustomerService {
         customers.put(4L, buildWithLoan(4L, "Bruce Wayne"));
         customers.put(5L, buildWithLoan(5L, "Peter Parker"));
         customers.put(6L, buildWithLoan(6L, "Lord Aragorn"));
-        customers.put(7L, buildWithMultipleProducts(7L, "Peter Petrelli", "1234"));
-        customers.put(8L, buildWithMultipleProducts(8L, "Jean Grey", "8888"));
+        customers.put(7L, buildWithMultipleProducts(7L, "Peter Petrelli", "1234", "NL12345678"));
+        customers.put(8L, buildWithMultipleProducts(8L, "Jean Grey", "8888", "NL456789012"));
+        customers.put(9L, buildWithMultipleProducts(9L, "Stan Lee", "9999", "BE12345678"));
+        customers.put(10L, buildWithMultipleProducts(10L, "Yuri Gagarin", "1961", "BE34567812"));
     }
 
-    public static Customer buildWithMultipleProducts(Long customerId, String name, String lastDigits) {
+    private static Customer buildWithMultipleProducts(Long customerId, String name, String lastDigits, String accountNumber) {
         return Customer.builder()
                 .id(customerId)
                 .name(name)
-                .products(Arrays.asList(buildLoan(customerId), mockCreditCard(customerId, lastDigits)))
+                .products(Arrays.asList(buildLoan(customerId), buildCreditCard(customerId, lastDigits),
+                        buildAccount(customerId, accountNumber)))
                 .build();
     }
 
-    public static Customer buildWithCreditCard(Long customerId, String name, String lastDigits) {
+    private static Product buildAccount(Long customerId, String accountNumber) {
+        return Account.builder()
+                .customerId(customerId)
+                .accountNumber(accountNumber)
+                .balance(new BigDecimal(10000))
+                .build();
+    }
+
+    private static Customer buildWithCreditCard(Long customerId, String name, String lastDigits) {
         return Customer.builder()
                 .id(customerId)
                 .name(name)
-                .products(Collections.singletonList(mockCreditCard(customerId, lastDigits)))
+                .products(Collections.singletonList(buildCreditCard(customerId, lastDigits)))
                 .build();
     }
 
-    public static Customer buildWithLoan(Long customerId, String name){
+    private static Customer buildWithLoan(Long customerId, String name){
         return Customer.builder()
                 .id(customerId)
                 .name(name)
                 .products(Collections.singletonList(buildLoan(customerId)))
                 .build();
     }
-    public static Product mockCreditCard(Long customerId, String lastDigits) {
+    private static Product buildCreditCard(Long customerId, String lastDigits) {
         return CreditCard.builder()
                 .id(new Random().nextLong())
                 .customerId(customerId)
@@ -54,7 +67,7 @@ public abstract class CustomerService {
                 .cardNumber("4488****----****"+lastDigits)
                 .build();
     }
-    public static Product buildLoan(Long customerId) {
+    private static Product buildLoan(Long customerId) {
         return Loan.builder()
                 .id(new Random().nextLong())
                 .customerId(customerId)

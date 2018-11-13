@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+/**
+ * CustomerLoansAPI
+ */
 public class LoanService extends CustomerService {
 
     public CompletableFuture<List<Loan>> getLoansOf(Long customerId) {

@@ -6,6 +6,7 @@ import products.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -13,17 +14,20 @@ import java.util.stream.Collectors;
 public class WebBankEmulator {
     private static LoanService loanService = new LoanService();
     private static CreditCardService creditCardService = new CreditCardService();
+    private static AccountService accountService = new AccountService();
 
     public static void main(String[] args) {
 
         final ExecutorService executor =
                 Executors.newFixedThreadPool(10, r -> new Thread(r, "Our cool thread"));
 
-        Long customerId = 5L;
+        Long customerId = 7L;
 
         CompletableFuture<List<Product>> allProducts = loanService.getLoansOf(customerId)
+                .thenCompose(loans -> getProducts(loans, accountService.getAccountsOf(customerId)))
+                //.thenComposeAsync(loans -> getProducts(loans, accountService.getAccountsOf(customerId)))
                 //.thenCombine(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts);
-                .thenCombineAsync(creditCardService.getCreditCardsOf(customerId), WebBankEmulator::showProducts, executor);
+                .thenCombineAsync(creditCardService.getCreditCardsOf(customerId), (loans, creditCards) -> showProducts(loans, creditCards), executor);
 
         CompletableFuture<List<Product>> loansWithOverdue = allProducts
                 .thenApply( products -> updateOverdueInterest(products));
@@ -45,6 +49,16 @@ public class WebBankEmulator {
         executor.shutdown();
     }
 
+    private static CompletableFuture<List<Product>> getProducts(List<Loan> loans, CompletableFuture<List<Account>> accounts) {
+        List<Product> loansAndAccounts = new ArrayList<>();
+        return accounts.thenApply( acc -> {
+            loansAndAccounts.addAll(acc);
+            loansAndAccounts.addAll(loans);
+            return loansAndAccounts;
+        });
+
+    }
+
     private static void outputLoans(List<Product> loans) {
         CustomerService.sleep(300);
         System.out.println("Thread in outputLoans : " + Thread.currentThread().getName());
@@ -63,14 +77,16 @@ public class WebBankEmulator {
                 .collect(Collectors.toList());
     }
 
-    private static List<Product> showProducts(List<Loan> loans, List<CreditCard> creditCards) {
+    private static List<Product> showProducts(List<Product> loansAndAccounts, List<CreditCard> creditCards) {
         System.out.println("****** Products ******");
         System.out.println("Thread in showProducts : " + Thread.currentThread().getName());
-        loans.forEach(System.out::println);
+        loansAndAccounts.forEach(System.out::println);
         creditCards.forEach(System.out::println);
 
+        System.out.println("****** Products end ******");
+
         List<Product> products = new ArrayList<>();
-        products.addAll(loans);
+        products.addAll(loansAndAccounts);
         products.addAll(creditCards);
         return  products;
     }

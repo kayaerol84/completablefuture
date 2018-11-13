@@ -8,6 +8,11 @@ import java.util.stream.Collectors;
 
 public class CreditCardService extends CustomerService {
 
+    /**
+     * CustomerCreditCardsAPI
+     * @param customerId
+     * @return
+     */
     public CompletableFuture<List<CreditCard>> getCreditCardsOf(Long customerId) {
         sleep(300);
         List<CreditCard> creditCards = customers.get(customerId).getProducts().stream()
